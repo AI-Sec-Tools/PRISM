@@ -1,0 +1,5 @@
+# PRISM Basic Requirements
+pyyaml>=6.0
+requests>=2.28.0
+click>=8.1.0
+python-dateutil>=2.8.0
