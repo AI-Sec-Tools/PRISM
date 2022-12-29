@@ -5,3 +5,5 @@ click>=8.1.0
 python-dateutil>=2.8.0
 aiosqlite>=0.17.0
 sqlalchemy>=2.0.0
+pandas>=1.5.0
+numpy>=1.24.0
