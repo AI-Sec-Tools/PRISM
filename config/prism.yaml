@@ -1,0 +1,13 @@
+# PRISM Configuration
+database:
+  path: data/prism.db
+  
+logging:
+  level: INFO
+  file: logs/prism.log
+
+risk_scoring:
+  weights:
+    cvss_score: 0.6
+    exploitability: 0.2
+    business_impact: 0.2
