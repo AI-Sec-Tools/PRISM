@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  prism:
+    build: .
+    container_name: prism-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PRISM_CONFIG_PATH=/app/config/prism.yaml
+    volumes:
+      - prism_data:/app/data
+      - prism_logs:/app/logs
+      - prism_reports:/app/reports
+    networks:
+      - prism-network
+
+networks:
+  prism-network:
+    driver: bridge
+
+volumes:
+  prism_data:
+  prism_logs:
+  prism_reports:
