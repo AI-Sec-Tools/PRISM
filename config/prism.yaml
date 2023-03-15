@@ -1,13 +1,24 @@
-# PRISM Configuration
+# Comprehensive PRISM Configuration
 database:
+  type: sqlite
   path: data/prism.db
-  
+
 logging:
   level: INFO
   file: logs/prism.log
 
-risk_scoring:
+risk_engine:
+  scoring_models: [cvss_plus, business_impact, temporal]
   weights:
-    cvss_score: 0.6
-    exploitability: 0.2
+    vulnerability_score: 0.4
+    exploitability: 0.25
     business_impact: 0.2
+    exposure: 0.15
+
+web_dashboard:
+  host: 0.0.0.0
+  port: 8080
+  
+intelligence:
+  feeds: [cisa_kev, epss, nvd]
+  update_frequency: 3600

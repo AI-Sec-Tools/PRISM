@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prism-security"
+version = "1.0.0"
+description = "Priority Risk Intelligence & Scoring Manager"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Manan Wason", email = "manan13056@iiitd.ac.in"},
+    {name = "Dewank Pant", email = "dewankpant@gmail.com"},
+]
+keywords = ["vulnerability", "security", "risk-assessment"]
+requires-python = ">=3.8"
+dependencies = [
+    "fastapi>=0.95.0",
+    "uvicorn>=0.20.0",
+    "pyyaml>=6.0",
+    "requests>=2.28.0",
+    "pandas>=1.5.0",
+    "matplotlib>=3.6.0"
+]
+
+[project.scripts]
+prism = "prism:main"
