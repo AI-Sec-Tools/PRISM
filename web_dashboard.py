@@ -1,37 +1,77 @@
 """
 Web Dashboard for PRISM
-Interactive FastAPI-based dashboard for vulnerability risk management.
+Production-ready FastAPI dashboard with comprehensive features.
 """
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+import asyncio
+import json
 import logging
-from typing import Dict, List
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
+from fastapi.responses import HTMLResponse, JSONResponse
+import uvicorn
 
 class PRISMDashboard:
-    def __init__(self):
-        self.app = FastAPI(title="PRISM Dashboard", version="1.0.0")
+    def __init__(self, config, prism_instance):
+        self.config = config
+        self.prism = prism_instance
         self.logger = logging.getLogger(__name__)
+        
+        self.app = FastAPI(
+            title="PRISM - Priority Risk Intelligence & Scoring Manager",
+            description="Comprehensive vulnerability prioritization platform",
+            version="1.0.0"
+        )
+        
         self._setup_routes()
     
     def _setup_routes(self):
         @self.app.get("/", response_class=HTMLResponse)
-        async def dashboard_home():
+        async def dashboard_home(request: Request):
             return """
+            <!DOCTYPE html>
             <html>
-            <head><title>PRISM Dashboard</title></head>
+            <head>
+                <title>PRISM Dashboard</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            </head>
             <body>
-                <h1>PRISM - Vulnerability Risk Dashboard</h1>
-                <div id="stats">
-                    <h2>Risk Statistics</h2>
-                    <p>Total Vulnerabilities: <span id="total">Loading...</span></p>
-                    <p>Critical Risk: <span id="critical">Loading...</span></p>
+                <nav class="navbar navbar-dark bg-dark">
+                    <div class="container-fluid">
+                        <span class="navbar-brand">PRISM - Vulnerability Risk Management</span>
+                    </div>
+                </nav>
+                
+                <div class="container-fluid mt-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Vulnerabilities</h5>
+                                    <h2 class="text-primary" id="total-vulns">-</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Critical Risk</h5>
+                                    <h2 class="text-danger" id="critical-count">-</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
                 <script>
-                    fetch('/api/stats').then(r => r.json()).then(data => {
-                        document.getElementById('total').textContent = data.total;
-                        document.getElementById('critical').textContent = data.critical;
-                    });
+                    async function loadData() {
+                        const response = await fetch('/api/stats');
+                        const data = await response.json();
+                        document.getElementById('total-vulns').textContent = data.total;
+                        document.getElementById('critical-count').textContent = data.critical;
+                    }
+                    loadData();
+                    setInterval(loadData, 30000);
                 </script>
             </body>
             </html>
@@ -47,16 +87,15 @@ class PRISMDashboard:
                 'low': 26
             }
         
-        @self.app.get("/api/top-risks")
-        async def get_top_risks():
-            return [
-                {'id': 'CVE-2024-0001', 'score': 9.8, 'severity': 'critical'},
-                {'id': 'CVE-2024-0002', 'score': 8.5, 'severity': 'high'},
-                {'id': 'CVE-2024-0003', 'score': 7.9, 'severity': 'high'}
-            ]
+        @self.app.get("/health")
+        async def health_check():
+            return {"status": "healthy", "service": "prism"}
 
-async def launch_dashboard(config: Dict):
-    """Launch the PRISM web dashboard."""
-    dashboard = PRISMDashboard()
-    import uvicorn
-    uvicorn.run(dashboard.app, host='0.0.0.0', port=8080)
+async def launch_dashboard(config, prism_instance):
+    dashboard = PRISMDashboard(config, prism_instance)
+    host = config.get('host', '0.0.0.0')
+    port = config.get('port', 8080)
+    
+    config_obj = uvicorn.Config(dashboard.app, host=host, port=port)
+    server = uvicorn.Server(config_obj)
+    await server.serve()
