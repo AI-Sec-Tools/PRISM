@@ -46,3 +46,40 @@ class DatabaseManager:
                 vuln_data.get('published_date', datetime.now().isoformat())
             ))
             conn.commit()
+
+# Enhanced Database Operations
+    async def get_risk_trends(self, days: int = 30):
+        """Get risk score trends over time."""
+        cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
+        
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT date(created_at) as date, 
+                       AVG(cvss_score) as avg_score,
+                       COUNT(*) as count
+                FROM vulnerabilities 
+                WHERE created_at >= ?
+                GROUP BY date(created_at)
+                ORDER BY date
+            """, (cutoff_date,))
+            
+            trends = cursor.fetchall()
+            return [{'date': t[0], 'avg_score': t[1], 'count': t[2]} for t in trends]
+    
+    def get_vulnerability_stats(self):
+        """Get comprehensive vulnerability statistics."""
+        with sqlite3.connect(self.db_path) as conn:
+            # Total vulnerabilities
+            total = conn.execute("SELECT COUNT(*) FROM vulnerabilities").fetchone()[0]
+            
+            # By severity
+            severity_stats = {}
+            cursor = conn.execute("SELECT severity, COUNT(*) FROM vulnerabilities GROUP BY severity")
+            for row in cursor:
+                severity_stats[row[0]] = row[1]
+            
+            return {
+                'total': total,
+                'by_severity': severity_stats,
+                'last_updated': datetime.now().isoformat()
+            }
